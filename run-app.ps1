@@ -1,7 +1,8 @@
 # Certificate Name Autofiller - one-click launcher for Windows.
-# Started by start.bat. Installs what is missing, builds the web app once, starts the server
+# Started by run-app.bat. Installs what is missing, builds the web app once, starts the server
 # and opens the browser. Keep this window open while using the app; close it to stop.
-param([switch]$NoBrowser)
+# Options: -Port 8100 (first port to try), -NoBrowser (do not open the browser).
+param([switch]$NoBrowser, [int]$Port = 8000)
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -28,14 +29,14 @@ function Update-PathFromSystem {
 
 function Install-WithWinget([string]$Id, [string]$Name, [string]$Url) {
     if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-        Stop-WithError "$Name is not installed. Install it from $Url, then run start.bat again."
+        Stop-WithError "$Name is not installed. Install it from $Url, then run run-app.bat again."
     }
     $answer = Read-Host "$Name is not installed. Install it now? (Y/N)"
     if ($answer -notmatch '^[Yy]') {
-        Stop-WithError "$Name is required. Install it from $Url, then run start.bat again."
+        Stop-WithError "$Name is required. Install it from $Url, then run run-app.bat again."
     }
     winget install --id $Id -e --source winget --accept-package-agreements --accept-source-agreements
-    if ($LASTEXITCODE -ne 0) { Stop-WithError "Installing $Name failed. Install it from $Url, then run start.bat again." }
+    if ($LASTEXITCODE -ne 0) { Stop-WithError "Installing $Name failed. Install it from $Url, then run run-app.bat again." }
     Update-PathFromSystem
 }
 
@@ -88,7 +89,7 @@ $python = Find-Python
 if (-not $python) {
     Install-WithWinget "Python.Python.3.12" "Python 3.12" "https://www.python.org/downloads/"
     $python = Find-Python
-    if (-not $python) { Stop-WithError "Python was installed but is not available yet. Close this window and run start.bat again." }
+    if (-not $python) { Stop-WithError "Python was installed but is not available yet. Close this window and run run-app.bat again." }
 }
 Write-Host "Using: $($python.Exe) $($python.Args -join ' ')"
 
@@ -127,7 +128,7 @@ if ($needsBuild) {
     Write-Step "Checking Node.js (needed once to build the web interface)"
     if (-not (Find-Node)) {
         Install-WithWinget "OpenJS.NodeJS.LTS" "Node.js LTS" "https://nodejs.org/"
-        if (-not (Find-Node)) { Stop-WithError "Node.js was installed but is not available yet. Close this window and run start.bat again." }
+        if (-not (Find-Node)) { Stop-WithError "Node.js was installed but is not available yet. Close this window and run run-app.bat again." }
     }
     Push-Location $Frontend
     try {
@@ -152,8 +153,9 @@ if ($needsBuild) {
 }
 
 # ---------------------------------------------------------------- 3. Start
-$port = 8000
-while ($port -le 8010 -and -not (Test-PortFree $port)) {
+$port = $Port
+$lastPort = $Port + 10
+while ($port -le $lastPort -and -not (Test-PortFree $port)) {
     if (Test-OurApp $port) {
         Write-Step "The app is already running at http://127.0.0.1:$port"
         if (-not $NoBrowser) { Start-Process "http://127.0.0.1:$port" }
@@ -161,7 +163,7 @@ while ($port -le 8010 -and -not (Test-PortFree $port)) {
     }
     $port++
 }
-if ($port -gt 8010) { Stop-WithError "Ports 8000-8010 are all busy. Close other programs and try again." }
+if ($port -gt $lastPort) { Stop-WithError "Ports $Port-$lastPort are all busy. Close other programs and try again." }
 
 $url = "http://127.0.0.1:$port"
 Write-Step "Starting the app at $url"

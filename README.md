@@ -83,7 +83,7 @@ More screenshots are in [`docs/screenshots`](docs/screenshots). All names and ad
 
 ```
 certification model/
-├── start.bat / start.ps1      one-click launcher for Windows
+├── run-app.bat / run-app.ps1  one-click launcher for Windows
 ├── backend/
 │   ├── app/
 │   │   ├── main.py            FastAPI app and all /api routes
@@ -118,7 +118,7 @@ certification model/
 ### One-click start (Windows)
 
 1. Download the project: **Code → Download ZIP** on GitHub, then extract it. Or `git clone` it.
-2. Double-click **`start.bat`**.
+2. Double-click **`run-app.bat`**.
 
 That's all. The launcher:
 - checks for **Python 3.10+** and **Node.js 18+**, and offers to install any that are missing (press **Y**)
