@@ -97,7 +97,7 @@ certification model/
 │   │   ├── storage.py         sessions, safe file names, retention cleanup
 │   │   └── fonts/             bundled OFL fonts + licences
 │   ├── scripts/download_fonts.py
-│   ├── tests/                 pytest suite (77 tests)
+│   ├── tests/                 pytest suite (78 tests)
 │   ├── requirements.txt / requirements-dev.txt / pytest.ini / .env.example
 ├── frontend/                  React + TypeScript + Vite + Tailwind
 │   ├── src/App.tsx            5-step wizard and state
@@ -206,7 +206,7 @@ cd backend
 .venv/bin/python -m pytest          # Windows: .\.venv\Scripts\python -m pytest
 ```
 
-There are 77 tests:
+There are 78 tests:
 
 - **Excel parsing** (`test_excel_parser.py`):
   - header detection, including below title rows, manual mapping, sheet and header-row selection, `.xls`
@@ -227,6 +227,7 @@ There are 77 tests:
 - **API** (`test_api.py`):
   - the full HTTP workflow with 100 students
   - invalid uploads rejected; path traversal blocked; clear preview errors; manual header row
+  - works when file paths exceed Windows' 260-character limit (deep folders, long names)
 - **E-mail delivery** (`test_email.py`, using a fake SMTP server, so nothing is really sent):
   - the login is verified and the password is never returned
   - every row is classified (ready, no e-mail, invalid, no certificate, shared address)
