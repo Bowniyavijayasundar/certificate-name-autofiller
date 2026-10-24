@@ -83,6 +83,7 @@ More screenshots are in [`docs/screenshots`](docs/screenshots). All names and ad
 
 ```
 certification model/
+├── start.bat / start.ps1      one-click launcher for Windows
 ├── backend/
 │   ├── app/
 │   │   ├── main.py            FastAPI app and all /api routes
@@ -113,6 +114,20 @@ certification model/
 ---
 
 ## Install and run
+
+### One-click start (Windows)
+
+1. Download the project: **Code → Download ZIP** on GitHub, then extract it. Or `git clone` it.
+2. Double-click **`start.bat`**.
+
+That's all. The launcher:
+- checks for **Python 3.10+** and **Node.js 18+**, and offers to install any that are missing (press **Y**)
+- installs the backend packages and builds the web interface. This happens on the first run only and takes a few minutes; later starts take seconds
+- starts the app and **opens it in your browser** at http://127.0.0.1:8000, or the next free port
+
+Keep the black window open while you use the app, and close it to stop. Uploaded files and generated certificates are deleted when the app stops.
+
+### Manual setup (any OS / development)
 
 **Requirements:** Python 3.10+ (tested with 3.12) and Node.js 18.18+ or 20+ (tested with 20.13).
 

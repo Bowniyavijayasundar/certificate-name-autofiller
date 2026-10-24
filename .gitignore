@@ -15,3 +15,6 @@ frontend/dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# Real people's data for local testing - never publish
+samples/real_email_test.xlsx
