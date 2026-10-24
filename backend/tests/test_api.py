@@ -154,6 +154,32 @@ def test_preview_errors_are_clear(client, make_xlsx, template_png):
     assert check["will_generate"] == 1
 
 
+def test_works_when_paths_exceed_windows_260_character_limit(tmp_path, make_xlsx, template_png):
+    # A deep install folder plus a long student name: certificate paths are well over 260 characters.
+    deep = tmp_path / ("install folder " * 4).strip() / ("certificate-name-autofiller-main " * 3).strip() / ("x" * 60)
+    long_name = "Venkata Lakshmi Narasimha Subrahmanya Sharma Venkataraman Iyer"
+    app = create_app(Settings(storage_dir=deep / "backend" / "storage"), FontRegistry(include_system=False))
+    with TestClient(app) as client:
+        rows = [["Student Name", "Email Address"], [long_name, "v@example.edu"]]
+        session_id = setup_session(client, make_xlsx, template_png, rows)
+        started = client.post("/api/generate-certificates", json={
+            "session_id": session_id, "config": cfg(mapping={"name_column": "Student Name"}), "approved": True,
+            "formats": {"png": True, "pdf": True}})
+        status = wait_for(client, started.json()["job_id"])
+        result = status["results"][0]
+        assert status["counts"]["generated"] == 1, result["message"]
+        store = app.state.store
+        job = store.get_job(status["job_id"])
+        assert len(str(job.files[result["png"]]).removeprefix("\\\\?\\")) > 260 or len(str(deep)) < 200
+        assert client.get(f"/api/jobs/{status['job_id']}/files/{result['png']}").content.startswith(b"\x89PNG")
+        with zipfile.ZipFile(io.BytesIO(client.get(f"/api/download-zip/{status['job_id']}").content)) as zf:
+            assert result["png"] in zf.namelist()
+        from app.mailer import certificate_pdf
+        pdf, _ = certificate_pdf(job, next(r for r in job.results))
+        assert pdf.startswith(b"%PDF")
+        assert client.delete(f"/api/sessions/{session_id}").status_code == 200
+
+
 def test_reparse_with_manual_header_row(client, make_xlsx, template_png):
     rows = [["Batch 2026"], ["Full Name", "Branch"], ["Asha", "CSE"]]
     session_id = setup_session(client, make_xlsx, template_png, rows)

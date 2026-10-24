@@ -72,6 +72,8 @@ class Settings:
 
 def load_settings() -> Settings:
     storage = os.getenv("STORAGE_DIR", "").strip()
+    # Each copy of the app keeps its own folder, so two running copies never clean up each
+    # other's files. Long Windows paths are handled by storage.long_path().
     storage_dir = Path(storage) if storage else BACKEND_DIR / "storage"
     if not storage_dir.is_absolute():
         storage_dir = (BACKEND_DIR / storage_dir).resolve()

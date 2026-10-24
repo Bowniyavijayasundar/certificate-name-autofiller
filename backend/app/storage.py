@@ -7,6 +7,7 @@ file names are only ever used for display or after strict sanitisation.
 from __future__ import annotations
 
 import logging
+import os
 import re
 import shutil
 import threading
@@ -30,6 +31,19 @@ _FORBIDDEN = re.compile(r'[<>:"/\\|?*\x00-\x1f\x7f]')
 _WINDOWS_RESERVED = {
     "con", "prn", "aux", "nul", *(f"com{i}" for i in range(1, 10)), *(f"lpt{i}" for i in range(1, 10)),
 }
+
+
+def long_path(path: Path) -> Path:
+    """On Windows, use the \\\\?\\ form so paths longer than 260 characters still work
+    (deep install folders + long student names). No-op elsewhere."""
+    if os.name != "nt":
+        return path
+    text = str(path.resolve())
+    if text.startswith("\\\\?\\"):
+        return Path(text)
+    if text.startswith("\\\\"):  # UNC share: \\server\share -> \\?\UNC\server\share
+        return Path("\\\\?\\UNC\\" + text[2:])
+    return Path("\\\\?\\" + text)
 
 
 def new_id() -> str:
@@ -101,7 +115,7 @@ class Session:
 
 class SessionStore:
     def __init__(self, root: Path, retention_seconds: float):
-        self.root = root
+        self.root = long_path(root)
         self.retention_seconds = retention_seconds
         self._sessions: dict[str, Session] = {}
         self._jobs: dict[str, "Job"] = {}
@@ -113,6 +127,8 @@ class SessionStore:
         """Create the storage folder and remove leftovers from a previous run (their
         in-memory metadata is gone, so they could never be downloaded or cleaned otherwise)."""
         self.root.mkdir(parents=True, exist_ok=True)
+        if os.name != "nt":
+            os.chmod(self.root, 0o700)  # shared /tmp on Linux/macOS: only this user may read student data
         for child in self.root.iterdir():
             if child.is_dir() and is_valid_id(child.name):
                 shutil.rmtree(child, ignore_errors=True)
