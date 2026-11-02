@@ -16,6 +16,8 @@ Excel upload → PNG upload → column mapping → name placement → live previ
 
 More screenshots are in [`docs/screenshots`](docs/screenshots). All names and addresses shown are fictional sample data.
 
+**Authors:** [Bowniya Vijayasundar](https://www.linkedin.com/in/bowniya-vijayasundar-3b7093364) and Irfan Sheriff
+
 ---
 
 ## Contents
